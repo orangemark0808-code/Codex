@@ -1,0 +1,4 @@
+interface:
+  display_name: "Portrait Prompt Workflow"
+  short_description: "「ポートレート」入力時に11ステップで要件収集し、最終的に画像生成と英語プロンプト出力を制御する。"
+  default_prompt: "ポートレート用の段階的ヒアリングを開始する"
