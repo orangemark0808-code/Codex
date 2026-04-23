@@ -1,0 +1,118 @@
+:root {
+  color-scheme: light;
+  font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+}
+
+body {
+  margin: 0;
+  background: #f6f7fb;
+  color: #1f2937;
+}
+
+.container {
+  max-width: 960px;
+  margin: 28px auto;
+  padding: 0 16px 40px;
+}
+
+h1 {
+  margin-bottom: 8px;
+}
+
+.rule {
+  margin-top: 0;
+  color: #4b5563;
+}
+
+.card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 16px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+}
+
+.hidden {
+  display: none;
+}
+
+.step-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 12px;
+  background: #fcfdff;
+}
+
+.step-card h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+.field-block {
+  margin-bottom: 10px;
+}
+
+.field-label {
+  display: block;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.option-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.option {
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+  padding: 6px 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff;
+}
+
+textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  padding: 10px 12px;
+  font: inherit;
+  min-height: 44px;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+button {
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  cursor: pointer;
+  background: #2563eb;
+  color: #fff;
+  font: inherit;
+}
+
+button.secondary {
+  background: #6b7280;
+}
+
+.error {
+  color: #b91c1c;
+  min-height: 20px;
+}
+
+pre {
+  white-space: pre-wrap;
+  line-height: 1.6;
+}
