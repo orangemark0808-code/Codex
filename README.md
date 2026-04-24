@@ -32,8 +32,9 @@
 
 ## 公開されないときのチェック
 
+- PRでは Build のみ実行し、Deploy は実行しません（権限不足による失敗を回避）。
 1. **Settings → Pages** で `Source = GitHub Actions` になっているか。
 2. **Settings → Actions → General → Workflow permissions** が `Read and write permissions` になっているか。
-3. デフォルトブランチ（通常 `main`）または `work` へ push 後、Actions の `Deploy static site to GitHub Pages` が成功しているか。
+3. `main`（または `master`）へ push 後、Actions の Deploy ジョブが成功しているか。
 4. Actions 成功後、反映まで 1〜5 分待ってからURLを再読み込みしたか。
 5. URL末尾にリポジトリ名を含めているか（例: `/Codex/`）。
