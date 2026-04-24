@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: read
+  deployments: write
 
 concurrency:
   group: "pages"
@@ -32,6 +33,16 @@ jobs:
         with:
           name: static-site
           path: ./_site
+
+  pr-deployment-marker:
+    if: github.event_name == 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+    steps:
+      - name: Mark PR deployment status
+        run: echo "PR check complete. Real Pages deployment runs on push to main/master/work."
 
   deploy:
     if: github.event_name != 'pull_request'

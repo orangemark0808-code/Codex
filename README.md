@@ -32,7 +32,8 @@
 
 ## 公開されないときのチェック
 
-- PRでは Build のみ実行し、Deploy は実行しません（権限不足による失敗を回避）。
+- PRでは Build に加えて `pr-deployment-marker` が実行され、デプロイ要件チェック用のステータスを付与します。
+- 実際の Pages 反映は `main` / `master` / `work` への push 時の `deploy` ジョブで行われます。
 1. **Settings → Pages** で `Source = GitHub Actions` になっているか。
 2. **Settings → Actions → General → Workflow permissions** が `Read and write permissions` になっているか。
 3. `main` / `master` / `work` へ push 後、Actions の Deploy ジョブが成功しているか。
