@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>画像生成プロンプトビルダー</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --pink: #FF8C42;
+    --pink-light: #FFD4B0;
+    --pink-pale: #FFF6EF;
+    --lavender: #FFB347;
+    --lavender-light: #FFE8C8;
+    --mint: #FFD580;
+    --yellow: #FFF3C4;
+    --peach: #FFCBA4;
+    --text: #3D2200;
+    --text-light: #8A5A2A;
+    --white: #FFFFFF;
+    --shadow: rgba(200, 100, 30, 0.12);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Zen Maru Gothic', sans-serif;
+    background: linear-gradient(135deg, #FFF4EC 0%, #FFF8E8 50%, #FFFBF0 100%);
+    min-height: 100vh;
+    color: var(--text);
+    padding-bottom: 60px;
+  }
+
+  /* ヘッダー */
+  header {
+    background: white;
+    border-bottom: 2px solid var(--pink-light);
+    padding: 20px 24px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 4px 20px var(--shadow);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .header-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .header-icon {
+    width: 38px;
+    height: 38px;
+    background: linear-gradient(135deg, #FF8C42, #FFB347);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+  }
+
+  h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px;
+    color: var(--text);
+    letter-spacing: 0.02em;
+  }
+
+  h1 span {
+    font-family: 'Zen Maru Gothic', sans-serif;
+    font-size: 12px;
+    color: var(--text-light);
+    display: block;
+    font-weight: 400;
+  }
+
+  /* リセットボタン */
+  .btn-reset {
+    background: none;
+    border: 1.5px solid var(--pink);
+    color: var(--pink);
+    font-family: 'Zen Maru Gothic', sans-serif;
+    font-size: 13px;
+    padding: 7px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 500;
+  }
+
+  .btn-reset:hover {
+    background: var(--pink-light);
+  }
+
+  /* メインコンテナ */
+  .container {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 28px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* STEPカード */
+  .step-card {
+    background: white;
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: 0 4px 20px var(--shadow);
+    border: 1.5px solid transparent;
+    transition: border-color 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .step-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+  }
+
+  .step-card:nth-child(1)::before { background: linear-gradient(90deg, var(--pink), var(--lavender)); }
+  .step-card:nth-child(2)::before { background: linear-gradient(90deg, var(--lavender), var(--mint)); }
+  .step-card:nth-child(3)::before { background: linear-gradient(90deg, var(--mint), var(--yellow)); }
+  .step-card:nth-child(4)::before { background: linear-gradient(90deg, var(--yellow), var(--peach)); }
+  .step-card:nth-child(5)::before { background: linear-gradient(90deg, var(--peach), var(--pink)); }
+  .step-card:nth-child(6)::before { background: linear-gradient(90deg, var(--pink), var(--lavender)); }
+  .step-card:nth-child(7)::before { background: linear-gradient(90deg, var(--lavender), var(--mint)); }
+  .step-card:nth-child(8)::before { background: linear-gradient(90deg, var(--mint), var(--yellow)); }
+  .step-card:nth-child(9)::before { background: linear-gradient(90deg, var(--yellow), var(--peach)); }
+  .step-card:nth-child(10)::before { background: linear-gradient(90deg, var(--peach), var(--pink)); }
+  .step-card:nth-child(11)::before { background: linear-gradient(90deg, var(--pink), var(--lavender)); }
+  .step-card:nth-child(12)::before { background: linear-gradient(90deg, var(--lavender), var(--mint)); }
+  .step-card:nth-child(13)::before { background: linear-gradient(90deg, var(--mint), var(--pink)); }
+
+  .step-card.has-value {
+    border-color: var(--pink-light);
+  }
+
+  .step-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .step-badge {
+    background: linear-gradient(135deg, var(--pink-light), var(--lavender-light));
+    color: var(--text-light);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+  }
+
+  .step-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  /* サブグループ */
+  .sub-group {
+    margin-bottom: 12px;
+  }
+
+  .sub-label {
+    font-size: 12px;
+    color: var(--text-light);
+    font-weight: 500;
+    margin-bottom: 8px;
+    padding-left: 2px;
+  }
+
+  /* チップ選択 */
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .chip {
+    padding: 7px 14px;
+    border-radius: 20px;
+    border: 1.5px solid var(--pink-light);
+    background: var(--pink-pale);
+    font-family: 'Zen Maru Gothic', sans-serif;
+    font-size: 13px;
+    color: var(--text-light);
+    cursor: pointer;
+    transition: all 0.15s;
+    user-select: none;
+    line-height: 1;
+  }
+
+  .chip:hover {
+    border-color: var(--pink);
+    color: var(--text);
+  }
+
+  .chip.selected {
+    background: linear-gradient(135deg, var(--pink), var(--lavender));
+    border-color: transparent;
+    color: white;
+    font-weight: 700;
+    box-shadow: 0 3px 10px rgba(200, 100, 150, 0.25);
+  }
+
+  /* テキスト入力 */
+  .free-input {
+    width: 100%;
+    border: 1.5px solid var(--pink-light);
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-family: 'Zen Maru Gothic', sans-serif;
+    font-size: 13px;
+    color: var(--text);
+    background: var(--pink-pale);
+    margin-top: 10px;
+    resize: vertical;
+    min-height: 42px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .free-input:focus {
+    border-color: var(--pink);
+    background: white;
+  }
+
+  .free-input::placeholder {
+    color: #C0A0B0;
+  }
+
+  /* 仕切り */
+  .divider {
+    border: none;
+    border-top: 1.5px dashed var(--pink-light);
+    margin: 14px 0;
+  }
+
+  /* まとめボタン */
+  .btn-summary {
+    background: linear-gradient(135deg, var(--pink), var(--lavender));
+    color: white;
+    border: none;
+    border-radius: 30px;
+    padding: 16px 40px;
+    font-family: 'Zen Maru Gothic', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 6px 24px rgba(220, 120, 30, 0.35);
+    transition: all 0.2s;
+    letter-spacing: 0.05em;
+    display: block;
+    margin: 10px auto 0;
+    width: 100%;
+    max-width: 360px;
+  }
+
+  .btn-summary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(220, 120, 30, 0.45);
+  }
+
+  .btn-summary:active {
+    transform: translateY(0);
+  }
+
+  /* 出力エリア */
+  .output-section {
+    background: white;
+    border-radius: 20px;
+    padding: 28px;
+    box-shadow: 0 4px 20px var(--shadow);
+    border: 2px solid var(--pink-light);
+    display: none;
+  }
+
+  .output-section.visible {
+    display: block;
+    animation: fadeIn 0.4s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .output-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .output-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px;
+    color: var(--text);
+  }
+
+  .output-title .emoji {
+    margin-right: 6px;
+  }
+
+  .btn-copy {
+    background: linear-gradient(135deg, #FFD580, #FFC04A);
+    border: none;
+    border-radius: 20px;
+    padding: 9px 22px;
+    font-family: 'Zen Maru Gothic', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: #5A3A00;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 3px 12px rgba(220, 160, 30, 0.3);
+  }
+
+  .btn-copy:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 5px 16px rgba(220, 160, 30, 0.4);
+  }
+
+  .btn-copy.copied {
+    background: linear-gradient(135deg, #FFE8A0, #FFD580);
+  }
+
+  .output-text {
+    background: var(--pink-pale);
+    border-radius: 14px;
+    padding: 20px;
+    font-size: 14px;
+    line-height: 2;
+    white-space: pre-wrap;
+    color: var(--text);
+    border: 1.5px solid var(--pink-light);
+  }
+
+  .output-row {
+    display: flex;
+    gap: 8px;
+    padding: 3px 0;
+  }
+
+  .output-key {
+    color: var(--text-light);
+    font-weight: 700;
+    min-width: 80px;
+    font-size: 13px;
+  }
+
+  .output-val {
+    color: var(--text);
+    font-size: 13px;
+    flex: 1;
+  }
+
+  /* モバイル調整 */
+  @media (max-width: 500px) {
+    .step-card { padding: 18px 16px; }
+    .chip { font-size: 12px; padding: 6px 11px; }
+    h1 { font-size: 17px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-title">
+    <div class="header-icon">✨</div>
+    <h1>
+      Image Prompt Builder
+      <span>画像生成プロンプトメーカー</span>
+    </h1>
+  </div>
+  <button class="btn-reset" onclick="resetAll()">🔄 リセット</button>
+</header>
+
+<div class="container" id="mainContainer">
+
+  <!-- STEP1 人種・国籍 -->
+  <div class="step-card" id="card-1">
+    <div class="step-header">
+      <span class="step-badge">STEP 01</span>
+      <span class="step-title">人種・国籍</span>
+    </div>
+    <div class="chips" id="chips-race">
+      <div class="chip" onclick="toggleChip(this,'race','single')">日本人</div>
+      <div class="chip" onclick="toggleChip(this,'race','single')">東アジア</div>
+      <div class="chip" onclick="toggleChip(this,'race','single')">欧米</div>
+      <div class="chip" onclick="toggleChip(this,'race','single')">東南アジア</div>
+      <div class="chip" onclick="toggleChip(this,'race','single')">中東</div>
+      <div class="chip" onclick="toggleChip(this,'race','single')">アフリカ系</div>
+    </div>
+    <textarea class="free-input" id="free-race" placeholder="自由入力（例：ミックス、スカンジナビア系 など）" oninput="updateSummary()" rows="1"></textarea>
+  </div>
+
+  <!-- STEP2 性別 -->
+  <div class="step-card" id="card-2">
+    <div class="step-header">
+      <span class="step-badge">STEP 02</span>
+      <span class="step-title">性別</span>
+    </div>
+    <div class="chips" id="chips-gender">
+      <div class="chip" onclick="toggleChip(this,'gender','single')">女性</div>
+      <div class="chip" onclick="toggleChip(this,'gender','single')">男性</div>
+      <div class="chip" onclick="toggleChip(this,'gender','single')">中性的</div>
+    </div>
+    <textarea class="free-input" id="free-gender" placeholder="自由入力" oninput="updateSummary()" rows="1"></textarea>
+  </div>
+
+  <!-- STEP3 年齢・雰囲気 -->
+  <div class="step-card" id="card-3">
+    <div class="step-header">
+      <span class="step-badge">STEP 03</span>
+      <span class="step-title">年齢・雰囲気</span>
+    </div>
+    <div class="sub-group">
+      <div class="sub-label">年齢</div>
+      <div class="chips" id="chips-age">
+        <div class="chip" onclick="toggleChip(this,'age','single')">10代前半</div>
+        <div class="chip" onclick="toggleChip(this,'age','single')">10代後半</div>
+        <div class="chip" onclick="toggleChip(this,'age','single')">20代前半</div>
+        <div class="chip" onclick="toggleChip(this,'age','single')">20代後半</div>
+        <div class="chip" onclick="toggleChip(this,'age','single')">30代前半</div>
+        <div class="chip" onclick="toggleChip(this,'age','single')">30代後半</div>
+        <div class="chip" onclick="toggleChip(this,'age','single')">40代</div>
+        <div class="chip" onclick="toggleChip(this,'age','single')">50代以上</div>
+      </div>
+    </div>
+    <hr class="divider">
+    <div class="sub-group">
+      <div class="sub-label">雰囲気（複数可）</div>
+      <div class="chips" id="chips-vibe">
+        <div class="chip" onclick="toggleChip(this,'vibe','multi')">清潔感</div>
+        <div class="chip" onclick="toggleChip(this,'vibe','multi')">ナチュラル</div>
+        <div class="chip" onclick="toggleChip(this,'vibe','multi')">クール</div>
+        <div class="chip" onclick="toggleChip(this,'vibe','multi')">かわいい</div>
+        <div class="chip" onclick="toggleChip(this,'vibe','multi')">上品</div>
+        <div class="chip" onclick="toggleChip(this,'vibe','multi')">セクシー</div>
+        <div class="chip" onclick="toggleChip(this,'vibe','multi')">大人っぽい</div>
+        <div class="chip" onclick="toggleChip(this,'vibe','multi')">カジュアル</div>
+        <div class="chip" onclick="toggleChip(this,'vibe','multi')">モード系</div>
+      </div>
+    </div>
+    <textarea class="free-input" id="free-age" placeholder="自由入力（例：20代前半、清潔感あるナチュラル など）" oninput="updateSummary()" rows="1"></textarea>
+  </div>
+
+  <!-- STEP4 構図 -->
+  <div class="step-card" id="card-4">
+    <div class="step-header">
+      <span class="step-badge">STEP 04</span>
+      <span class="step-title">構図（ショット）</span>
+    </div>
+    <div class="sub-group">
+      <div class="sub-label">ショット</div>
+      <div class="chips" id="chips-shot">
+        <div class="chip" onclick="toggleChip(this,'shot','single')">顔アップ</div>
+        <div class="chip" onclick="toggleChip(this,'shot','single')">バストアップ</div>
+        <div class="chip" onclick="toggleChip(this,'shot','single')">ウエストショット</div>
+        <div class="chip" onclick="toggleChip(this,'shot','single')">全身（立ち）</div>
+        <div class="chip" onclick="toggleChip(this,'shot','single')">全身（ポーズあり）</div>
+        <div class="chip" onclick="toggleChip(this,'shot','single')">3/4ショット</div>
+      </div>
+    </div>
+    <hr class="divider">
+    <div class="sub-group">
+      <div class="sub-label">向き</div>
+      <div class="chips" id="chips-direction">
+        <div class="chip" onclick="toggleChip(this,'direction','single')">正面</div>
+        <div class="chip" onclick="toggleChip(this,'direction','single')">横</div>
+        <div class="chip" onclick="toggleChip(this,'direction','single')">斜め</div>
+        <div class="chip" onclick="toggleChip(this,'direction','single')">振り向き</div>
+      </div>
+    </div>
+    <textarea class="free-input" id="free-shot" placeholder="自由入力（例：歩いている、振り返りポーズ など）" oninput="updateSummary()" rows="1"></textarea>
+  </div>
+
+  <!-- STEP5 髪 -->
+  <div class="step-card" id="card-5">
+    <div class="step-header">
+      <span class="step-badge">STEP 05</span>
+      <span class="step-title">髪</span>
+    </div>
+    <div class="sub-group">
+      <div class="sub-label">長さ</div>
+      <div class="chips" id="chips-hairlen">
+        <div class="chip" onclick="toggleChip(this,'hairlen','single')">ロング</div>
+        <div class="chip" onclick="toggleChip(this,'hairlen','single')">セミロング</div>
+        <div class="chip" onclick="toggleChip(this,'hairlen','single')">ミディアム</div>
+        <div class="chip" onclick="toggleChip(this,'hairlen','single')">ボブ</div>
+        <div class="chip" onclick="toggleChip(this,'hairlen','single')">ショート</div>
+        <div class="chip" onclick="toggleChip(this,'hairlen','single')">ベリーショート</div>
+      </div>
+    </div>
+    <hr class="divider">
+    <div class="sub-group">
+      <div class="sub-label">色（複数可）</div>
+      <div class="chips" id="chips-haircolor">
+        <div class="chip" onclick="toggleChip(this,'haircolor','multi')">黒</div>
+        <div class="chip" onclick="toggleChip(this,'haircolor','multi')">ダークブラウン</div>
+        <div class="chip" onclick="toggleChip(this,'haircolor','multi')">ブラウン</div>
+        <div class="chip" onclick="toggleChip(this,'haircolor','multi')">ライトブラウン</div>
+        <div class="chip" onclick="toggleChip(this,'haircolor','multi')">ブロンド</div>
+        <div class="chip" onclick="toggleChip(this,'haircolor','multi')">グレー</div>
+        <div class="chip" onclick="toggleChip(this,'haircolor','multi')">ピンク</div>
+        <div class="chip" onclick="toggleChip(this,'haircolor','multi')">レッド</div>
+        <div class="chip" onclick="toggleChip(this,'haircolor','multi')">ブルー</div>
+        <div class="chip" onclick="toggleChip(this,'haircolor','multi')">ハイトーン</div>
+        <div class="chip" onclick="toggleChip(this,'haircolor','multi')">インナーカラー</div>
+        <div class="chip" onclick="toggleChip(this,'haircolor','multi')">グラデーション</div>
+        <div class="chip" onclick="toggleChip(this,'haircolor','multi')">ハイライト</div>
+      </div>
+    </div>
+    <hr class="divider">
+    <div class="sub-group">
+      <div class="sub-label">スタイル</div>
+      <div class="chips" id="chips-hairstyle">
+        <div class="chip" onclick="toggleChip(this,'hairstyle','single')">ストレート</div>
+        <div class="chip" onclick="toggleChip(this,'hairstyle','single')">ゆる巻き</div>
+        <div class="chip" onclick="toggleChip(this,'hairstyle','single')">強めカール</div>
+        <div class="chip" onclick="toggleChip(this,'hairstyle','single')">レイヤー</div>
+        <div class="chip" onclick="toggleChip(this,'hairstyle','single')">外ハネ</div>
+        <div class="chip" onclick="toggleChip(this,'hairstyle','single')">内巻き</div>
+        <div class="chip" onclick="toggleChip(this,'hairstyle','single')">パーマ</div>
+        <div class="chip" onclick="toggleChip(this,'hairstyle','single')">ウェーブ</div>
+        <div class="chip" onclick="toggleChip(this,'hairstyle','single')">アップスタイル</div>
+      </div>
+    </div>
+    <hr class="divider">
+    <div class="sub-group">
+      <div class="sub-label">前髪</div>
+      <div class="chips" id="chips-bangs">
+        <div class="chip" onclick="toggleChip(this,'bangs','single')">あり</div>
+        <div class="chip" onclick="toggleChip(this,'bangs','single')">なし</div>
+        <div class="chip" onclick="toggleChip(this,'bangs','single')">シースルー</div>
+        <div class="chip" onclick="toggleChip(this,'bangs','single')">ぱっつん</div>
+        <div class="chip" onclick="toggleChip(this,'bangs','single')">センターパート</div>
+      </div>
+    </div>
+    <textarea class="free-input" id="free-hair" placeholder="自由入力" oninput="updateSummary()" rows="1"></textarea>
+  </div>
+
+  <!-- STEP6 フェイスライン -->
+  <div class="step-card" id="card-6">
+    <div class="step-header">
+      <span class="step-badge">STEP 06</span>
+      <span class="step-title">フェイスライン</span>
+    </div>
+    <div class="chips" id="chips-face">
+      <div class="chip" onclick="toggleChip(this,'face','single')">卵型</div>
+      <div class="chip" onclick="toggleChip(this,'face','single')">シャープ</div>
+      <div class="chip" onclick="toggleChip(this,'face','single')">丸顔</div>
+      <div class="chip" onclick="toggleChip(this,'face','single')">面長</div>
+      <div class="chip" onclick="toggleChip(this,'face','single')">ベース型</div>
+    </div>
+    <textarea class="free-input" id="free-face" placeholder="自由入力" oninput="updateSummary()" rows="1"></textarea>
+  </div>
+
+  <!-- STEP7 目 -->
+  <div class="step-card" id="card-7">
+    <div class="step-header">
+      <span class="step-badge">STEP 07</span>
+      <span class="step-title">目</span>
+    </div>
+    <div class="sub-group">
+      <div class="sub-label">形</div>
+      <div class="chips" id="chips-eyeshape">
+        <div class="chip" onclick="toggleChip(this,'eyeshape','single')">アーモンド</div>
+        <div class="chip" onclick="toggleChip(this,'eyeshape','single')">大きめ</div>
+        <div class="chip" onclick="toggleChip(this,'eyeshape','single')">切れ長</div>
+        <div class="chip" onclick="toggleChip(this,'eyeshape','single')">たれ目</div>
+        <div class="chip" onclick="toggleChip(this,'eyeshape','single')">丸目</div>
+        <div class="chip" onclick="toggleChip(this,'eyeshape','single')">三白眼</div>
+      </div>
+    </div>
+    <hr class="divider">
+    <div class="sub-group">
+      <div class="sub-label">印象（複数可）</div>
+      <div class="chips" id="chips-eyeimpression">
+        <div class="chip" onclick="toggleChip(this,'eyeimpression','multi')">ナチュラル</div>
+        <div class="chip" onclick="toggleChip(this,'eyeimpression','multi')">クール</div>
+        <div class="chip" onclick="toggleChip(this,'eyeimpression','multi')">かわいい</div>
+        <div class="chip" onclick="toggleChip(this,'eyeimpression','multi')">色っぽい</div>
+        <div class="chip" onclick="toggleChip(this,'eyeimpression','multi')">意志が強い</div>
+      </div>
+    </div>
+    <textarea class="free-input" id="free-eye" placeholder="自由入力" oninput="updateSummary()" rows="1"></textarea>
+  </div>
+
+  <!-- STEP8 眉毛 -->
+  <div class="step-card" id="card-8">
+    <div class="step-header">
+      <span class="step-badge">STEP 08</span>
+      <span class="step-title">眉毛</span>
+    </div>
+    <div class="sub-group">
+      <div class="sub-label">形</div>
+      <div class="chips" id="chips-browsshape">
+        <div class="chip" onclick="toggleChip(this,'browsshape','single')">アーチ型</div>
+        <div class="chip" onclick="toggleChip(this,'browsshape','single')">ストレート</div>
+        <div class="chip" onclick="toggleChip(this,'browsshape','single')">緩やかなアーチ</div>
+        <div class="chip" onclick="toggleChip(this,'browsshape','single')">吊り上がり気味</div>
+        <div class="chip" onclick="toggleChip(this,'browsshape','single')">下がり眉</div>
+      </div>
+    </div>
+    <hr class="divider">
+    <div class="sub-group">
+      <div class="sub-label">太さ</div>
+      <div class="chips" id="chips-browswidth">
+        <div class="chip" onclick="toggleChip(this,'browswidth','single')">太め</div>
+        <div class="chip" onclick="toggleChip(this,'browswidth','single')">普通</div>
+        <div class="chip" onclick="toggleChip(this,'browswidth','single')">細め</div>
+        <div class="chip" onclick="toggleChip(this,'browswidth','single')">ナチュラル</div>
+      </div>
+    </div>
+    <hr class="divider">
+    <div class="sub-group">
+      <div class="sub-label">仕上げ・印象（複数可）</div>
+      <div class="chips" id="chips-browsfinish">
+        <div class="chip" onclick="toggleChip(this,'browsfinish','multi')">毛流れ感あり</div>
+        <div class="chip" onclick="toggleChip(this,'browsfinish','multi')">ふんわり</div>
+        <div class="chip" onclick="toggleChip(this,'browsfinish','multi')">シャープ</div>
+        <div class="chip" onclick="toggleChip(this,'browsfinish','multi')">知的</div>
+        <div class="chip" onclick="toggleChip(this,'browsfinish','multi')">やさしい</div>
+        <div class="chip" onclick="toggleChip(this,'browsfinish','multi')">凛々しい</div>
+        <div class="chip" onclick="toggleChip(this,'browsfinish','multi')">可憐</div>
+      </div>
+    </div>
+    <textarea class="free-input" id="free-brows" placeholder="自由入力" oninput="updateSummary()" rows="1"></textarea>
+  </div>
+
+  <!-- STEP9 鼻 -->
+  <div class="step-card" id="card-9">
+    <div class="step-header">
+      <span class="step-badge">STEP 09</span>
+      <span class="step-title">鼻</span>
+    </div>
+    <div class="chips" id="chips-nose">
+      <div class="chip" onclick="toggleChip(this,'nose','single')">自然</div>
+      <div class="chip" onclick="toggleChip(this,'nose','single')">高め</div>
+      <div class="chip" onclick="toggleChip(this,'nose','single')">小さめ</div>
+      <div class="chip" onclick="toggleChip(this,'nose','single')">シャープ</div>
+    </div>
+    <textarea class="free-input" id="free-nose" placeholder="自由入力" oninput="updateSummary()" rows="1"></textarea>
+  </div>
+
+  <!-- STEP10 口・唇 -->
+  <div class="step-card" id="card-10b">
+    <div class="step-header">
+      <span class="step-badge">STEP 10</span>
+      <span class="step-title">口・唇</span>
+    </div>
+    <div class="chips" id="chips-lips">
+      <div class="chip" onclick="toggleChip(this,'lips','single')">自然</div>
+      <div class="chip" onclick="toggleChip(this,'lips','single')">ふっくら</div>
+      <div class="chip" onclick="toggleChip(this,'lips','single')">薄め</div>
+      <div class="chip" onclick="toggleChip(this,'lips','single')">立体的</div>
+    </div>
+    <textarea class="free-input" id="free-lips" placeholder="自由入力" oninput="updateSummary()" rows="1"></textarea>
+  </div>
+
+  <!-- STEP11 肌 -->
+  <div class="step-card" id="card-11b">
+    <div class="step-header">
+      <span class="step-badge">STEP 11</span>
+      <span class="step-title">肌質</span>
+    </div>
+    <div class="chips" id="chips-skin">
+      <div class="chip" onclick="toggleChip(this,'skin','multi')">ナチュラル</div>
+      <div class="chip" onclick="toggleChip(this,'skin','multi')">透明感</div>
+      <div class="chip" onclick="toggleChip(this,'skin','multi')">ツヤ</div>
+      <div class="chip" onclick="toggleChip(this,'skin','multi')">マット</div>
+      <div class="chip" onclick="toggleChip(this,'skin','multi')">色白</div>
+      <div class="chip" onclick="toggleChip(this,'skin','multi')">健康的</div>
+    </div>
+    <textarea class="free-input" id="free-skin" placeholder="自由入力" oninput="updateSummary()" rows="1"></textarea>
+  </div>
+
+  <!-- STEP12 メイク -->
+  <div class="step-card" id="card-12b">
+    <div class="step-header">
+      <span class="step-badge">STEP 12</span>
+      <span class="step-title">メイク</span>
+    </div>
+    <div class="chips" id="chips-makeup">
+      <div class="chip" onclick="toggleChip(this,'makeup','multi')">ナチュラル</div>
+      <div class="chip" onclick="toggleChip(this,'makeup','multi')">韓国風</div>
+      <div class="chip" onclick="toggleChip(this,'makeup','multi')">クール</div>
+      <div class="chip" onclick="toggleChip(this,'makeup','multi')">しっかり</div>
+      <div class="chip" onclick="toggleChip(this,'makeup','multi')">モード</div>
+      <div class="chip" onclick="toggleChip(this,'makeup','multi')">艶感重視</div>
+    </div>
+    <textarea class="free-input" id="free-makeup" placeholder="自由入力" oninput="updateSummary()" rows="1"></textarea>
+  </div>
+
+  <!-- STEP13 微調整 -->
+  <div class="step-card" id="card-13b">
+    <div class="step-header">
+      <span class="step-badge">STEP 13</span>
+      <span class="step-title">微調整（仕上がり）</span>
+    </div>
+    <div class="chips" id="chips-adjust">
+      <div class="chip" onclick="toggleChip(this,'adjust','multi')">明るめ</div>
+      <div class="chip" onclick="toggleChip(this,'adjust','multi')">暗め</div>
+      <div class="chip" onclick="toggleChip(this,'adjust','multi')">シャープ寄り</div>
+      <div class="chip" onclick="toggleChip(this,'adjust','multi')">柔らかさ少し追加</div>
+      <div class="chip" onclick="toggleChip(this,'adjust','multi')">コントラスト強め</div>
+      <div class="chip" onclick="toggleChip(this,'adjust','multi')">コントラスト弱め</div>
+      <div class="chip" onclick="toggleChip(this,'adjust','multi')">リアル寄り</div>
+      <div class="chip" onclick="toggleChip(this,'adjust','multi')">ナチュラル寄り</div>
+      <div class="chip" onclick="toggleChip(this,'adjust','multi')">切り抜き最適化</div>
+      <div class="chip" onclick="toggleChip(this,'adjust','multi')">境界くっきり</div>
+      <div class="chip" onclick="toggleChip(this,'adjust','multi')">影を弱くする</div>
+    </div>
+    <textarea class="free-input" id="free-adjust" placeholder="自由入力" oninput="updateSummary()" rows="1"></textarea>
+  </div>
+
+  <!-- STEP14 最終補足 -->
+  <div class="step-card" id="card-14">
+    <div class="step-header">
+      <span class="step-badge">STEP 14</span>
+      <span class="step-title">最終補足</span>
+    </div>
+    <textarea class="free-input" id="free-note" placeholder="追加要望があれば入力してください（例：白背景、スタジオ撮影風 など）" oninput="updateSummary()" rows="2" style="margin-top:0;"></textarea>
+  </div>
+
+  <!-- まとめボタン -->
+  <button class="btn-summary" onclick="showSummary()">✨ 入力まとめを生成する</button>
+
+  <!-- 出力エリア -->
+  <div class="output-section" id="outputSection">
+    <div class="output-header">
+      <div class="output-title"><span class="emoji">📋</span>【入力まとめ】</div>
+      <button class="btn-copy" id="copyBtn" onclick="copyOutput()">コピーする</button>
+    </div>
+    <div class="output-text" id="outputText"></div>
+  </div>
+
+</div>
+
+<script>
+  // 選択状態管理
+  const state = {
+    race: [], gender: [], age: [], vibe: [], shot: [], direction: [],
+    hairlen: [], haircolor: [], hairstyle: [], bangs: [],
+    face: [], eyeshape: [], eyeimpression: [],
+    browsshape: [], browswidth: [], browsfinish: [],
+    nose: [], lips: [],
+    skin: [], makeup: [], adjust: []
+  };
+
+  function toggleChip(el, key, mode) {
+    const val = el.textContent.trim();
+    if (mode === 'single') {
+      const container = el.parentElement;
+      container.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+      state[key] = [];
+      el.classList.add('selected');
+      state[key] = [val];
+    } else {
+      if (el.classList.contains('selected')) {
+        el.classList.remove('selected');
+        state[key] = state[key].filter(v => v !== val);
+      } else {
+        el.classList.add('selected');
+        state[key].push(val);
+      }
+    }
+    updateSummary();
+  }
+
+  function getValue(key, freeId) {
+    const chips = state[key] || [];
+    const free = document.getElementById(freeId)?.value.trim() || '';
+    const parts = [...chips];
+    if (free) parts.push(free);
+    return parts.length ? parts.join('、') : '未選択';
+  }
+
+  function getHairValue() {
+    const len = state.hairlen.join('、');
+    const col = state.haircolor.join('、');
+    const sty = state.hairstyle.join('、');
+    const ban = state.bangs.join('、');
+    const free = document.getElementById('free-hair')?.value.trim() || '';
+    const parts = [];
+    if (len) parts.push(`長さ：${len}`);
+    if (col) parts.push(`色：${col}`);
+    if (sty) parts.push(`スタイル：${sty}`);
+    if (ban) parts.push(`前髪：${ban}`);
+    if (free) parts.push(free);
+    return parts.length ? parts.join(' / ') : '未選択';
+  }
+
+  function getShotValue() {
+    const shot = state.shot.join('、');
+    const dir = state.direction.join('、');
+    const free = document.getElementById('free-shot')?.value.trim() || '';
+    const parts = [];
+    if (shot) parts.push(shot);
+    if (dir) parts.push(`向き：${dir}`);
+    if (free) parts.push(free);
+    return parts.length ? parts.join(' / ') : '未選択';
+  }
+
+  function getAgeValue() {
+    const age = state.age.join('、');
+    const vibe = state.vibe.join('、');
+    const free = document.getElementById('free-age')?.value.trim() || '';
+    const parts = [];
+    if (age) parts.push(age);
+    if (vibe) parts.push(`雰囲気：${vibe}`);
+    if (free) parts.push(free);
+    return parts.length ? parts.join(' / ') : '未選択';
+  }
+
+  function getEyeValue() {
+    const shape = state.eyeshape.join('、');
+    const imp = state.eyeimpression.join('、');
+    const free = document.getElementById('free-eye')?.value.trim() || '';
+    const parts = [];
+    if (shape) parts.push(shape);
+    if (imp) parts.push(`印象：${imp}`);
+    if (free) parts.push(free);
+    return parts.length ? parts.join(' / ') : '未選択';
+  }
+
+  function getBrowsValue() {
+    const shape = state.browsshape.join('、');
+    const width = state.browswidth.join('、');
+    const finish = state.browsfinish.join('、');
+    const free = document.getElementById('free-brows')?.value.trim() || '';
+    const parts = [];
+    if (shape) parts.push(shape);
+    if (width) parts.push(`太さ：${width}`);
+    if (finish) parts.push(finish);
+    if (free) parts.push(free);
+    return parts.length ? parts.join(' / ') : '未選択';
+  }
+
+  function buildOutputText() {
+    const lines = [
+      `【入力まとめ】`,
+      `人種：${getValue('race','free-race')}`,
+      `性別：${getValue('gender','free-gender')}`,
+      `年齢・雰囲気：${getAgeValue()}`,
+      `構図：${getShotValue()}`,
+      `髪：${getHairValue()}`,
+      `フェイスライン：${getValue('face','free-face')}`,
+      `目：${getEyeValue()}`,
+      `眉毛：${getBrowsValue()}`,
+      `鼻：${getValue('nose','free-nose')}`,
+      `口：${getValue('lips','free-lips')}`,
+      `肌：${getValue('skin','free-skin')}`,
+      `メイク：${getValue('makeup','free-makeup')}`,
+      `微調整：${getValue('adjust','free-adjust')}`,
+      `補足：${document.getElementById('free-note')?.value.trim() || 'なし'}`,
+    ];
+    return lines.join('\n');
+  }
+
+  function updateSummary() {
+    const section = document.getElementById('outputSection');
+    if (section.classList.contains('visible')) {
+      renderOutput();
+    }
+  }
+
+  function renderOutput() {
+    const text = buildOutputText();
+    const lines = text.split('\n');
+    const container = document.getElementById('outputText');
+    container.innerHTML = '';
+    lines.forEach((line, i) => {
+      if (i === 0) {
+        const title = document.createElement('div');
+        title.style.cssText = 'font-weight:700;font-size:15px;color:var(--text);margin-bottom:8px;';
+        title.textContent = line;
+        container.appendChild(title);
+      } else {
+        const row = document.createElement('div');
+        row.className = 'output-row';
+        const [key, ...vals] = line.split('：');
+        const keyEl = document.createElement('span');
+        keyEl.className = 'output-key';
+        keyEl.textContent = key + '：';
+        const valEl = document.createElement('span');
+        valEl.className = 'output-val';
+        valEl.textContent = vals.join('：');
+        row.appendChild(keyEl);
+        row.appendChild(valEl);
+        container.appendChild(row);
+      }
+    });
+  }
+
+  function showSummary() {
+    const section = document.getElementById('outputSection');
+    section.classList.add('visible');
+    renderOutput();
+    setTimeout(() => {
+      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  }
+
+  function copyOutput() {
+    const text = buildOutputText();
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById('copyBtn');
+      btn.textContent = '✓ コピーしました！';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = 'コピーする';
+        btn.classList.remove('copied');
+      }, 2000);
+    });
+  }
+
+  function resetAll() {
+    Object.keys(state).forEach(k => state[k] = []);
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+    document.querySelectorAll('.free-input').forEach(t => t.value = '');
+    const section = document.getElementById('outputSection');
+    section.classList.remove('visible');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+</script>
+</body>
+</html>
